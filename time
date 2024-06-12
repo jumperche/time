@@ -1,0 +1,188 @@
+ library(readr)
+ #create a dataframe from dataset
+mydata <- read.csv("opsd_germany_daily.csv",header=TRUE,row.names="Date")
+mydata
+#look at part of df
+head(mydata)
+tail(mydata)
+#view data in tabular format
+View(mydata)
+
+#dimension of the object
+dim(mydata)
+#data type of each column in df
+str(mydata)
+#looking at row names (indexes)
+row.names(mydata)
+#accessing a specific row
+mydata["2008-09-26",]
+#accessing multiple rows
+mydata[c("2008-09-14","2008-09-26"),]
+summary(mydata)
+#without parsing date column
+mydata2 <- read.csv("opsd_germany_daily1.csv")
+mydata2
+#look at the Date column
+str(mydata2$Date)
+#convert into date format
+x<-as.Date(mydata2$Date)
+head(x)
+str(x)
+class(x)
+#create year, month, day column
+year<-as.numeric(format(x,'%Y'))
+head(year)
+month<-as.numeric(format(x,'%m'))
+head(month)
+day<-as.numeric(format(x,'%d'))
+head(day)
+
+head(mydata2)
+
+#add columns to existing dataframe
+mydata2<-cbind(mydata2,year,month,day)
+head(mydata2)
+head(sample(mydata2,8))
+#create plot
+plot(mydata2$year,mydata2$Consumption,type="l",xlab="year",ylab="Consumption")
+plot(mydata2$year,mydata2$Consumption,type="l",xlab="year",ylab="Consumption",lty=1,ylim=c(800,1700),xlim=c(2006,2018))
+#one plot/window
+par(mfrow=c(1,1))
+plot(mydata2[,2],xlab="year",ylab="Consumption",type="l",lwd=2,col="blue",xlim=c(2006,2018),ylim=c(1000,1500),main="Consumption graph")
+plot(10*diff(log(mydata2[,2])),xlab="year",ylab="Consumption",type="l",lwd=2,col="blue",ylim=c(-5,5),main="Consumption graph")
+
+library(ggplot2)
+ggplot(mydata2,type="o")+geom_line(aes(x=year,y=Consumption,group=1))
+ggplot(data=mydata2,mapping = aes(x=year,y=Consumption,col="red"))+geom_point()
+
+
+min(mydata2$Wind,na.rm = TRUE)
+max(mydata2$Wind,na.rm = TRUE)
+#convert data column
+mydata2$Date<-as.Date(mydata2$Date)
+#for multiple plots
+par(mfrow=c(3,1))
+
+plot1<-plot(mydata2[,2],xlab="year",ylab="daily totals",type="l",
+            lwd=2,main="Consumption",col="red",ylim=c(840,1750))
+
+plot1<-plot(mydata2$Date,mydata2[,2],xlab="year",ylab="daily totals",type="l",
+            lwd=2,main="Consumption",col="red",ylim=c(840,1750),xlim=c(min(mydata2$Date),max(mydata2$Date)))
+
+plot2<-plot(mydata2$Date,mydata2[,4],xlab="year",ylab="daily totals",type="l",
+            lwd=2,main="Solar",col="blue",ylim=c(0,400),xlim=c(min(mydata2$Date),max(mydata2$Date)))
+
+plot3<-plot(mydata2$Date,mydata2[,3],xlab="year",ylab="daily totals",type="l",
+            lwd=2,main="Wind",col="orange",ylim=c(0,900),xlim=c(min(mydata2$Date),max(mydata2$Date)))
+
+par(mfrow=c(1,1))            
+mydata3=subset(mydata2,subset=mydata2$Date>="2017-01-01"&mydata2<="2017-2-28")
+head(mydata3)
+plot(mydata3$Date,mydata3$Consumption,type="l",col="orange")
+
+xmin<-min(mydata3$Date,na.rm=T)
+xmax<-max(mydata3$Date,na.rm=T)
+ymin<-min(mydata3$Consumption,na.rm=T)
+
+ymax<-max(mydata3$Consumption,na.rm=T)
+
+#add solid
+grid()
+#add horizontal lines
+abline(h=c(1300,1500,1600))
+#add vertical lines
+abline(v=seq(xmin,xmax,7),lty=2,col="blue") 
+
+
+boxplot(mydata3$Wind)
+quantile(mydata3$Consumption,probs = c(0,0.25,0.5,0.75,1),na.rm = T)
+
+#yearly
+boxplot(mydata2$Consumption~mydata2$year,main="Consumption",ylab="Consuption",
+        xlab = "year",ylim=c(600,1800),las=1)
+#monthly
+boxplot(mydata2$Consumption~mydata2$month,main="Consumption",ylab="Consuption",
+        xlab = "month",ylim=c(600,1800),las=1)
+
+par(mfrow=c(3,1))
+boxplot(mydata2$Consumption~mydata2$year,main="Consumption",ylab="Consuption",
+        xlab = "year",ylim=c(600,1800),las=1,col="green")
+boxplot(mydata2$Consumption~mydata2$month,main="Consumption",ylab="Consuption",
+        xlab = "month",ylim=c(600,1800),las=1,col="blue")
+boxplot(mydata2$Consumption~mydata2$day,main="Consumption",ylab="Consuption",
+        xlab = "daily",ylim=c(600,1800),las=1,col="red")
+
+library(dplyr)
+summary(mydata2)
+#check for na data
+colSums((!is.na((mydata2))))
+nrow(is.na(mydata2))
+
+#frequencie
+freq1<-seq(xmin,by="day",length.out=5)
+freq1
+typeof(freq1)
+class(freq1)
+
+#select data which has na values for wind
+selWind1<-mydata2[which(is.na(mydata2$Wind)),
+                  names(mydata2)%in%c("Date","Consumption","Wind","Solar")]
+selWind1[1:10,]
+View(selWind1)
+
+#select data which has values for wind
+selWind2<-mydata2[which(!is.na(mydata2$Wind)),
+                  names(mydata2)%in%c("Date","Consumption","Wind","Solar")]
+selWind2[1:10,]
+View(selWind2)
+
+#select year 2011 which has a missing value for a wind
+selWind3<-mydata2[which(mydata2$year=="2011"),names(mydata2)%in%c("Date","Consumption","Wind","Solar")]
+selWind3[1:10,]
+
+View(selWind3)
+
+#number of rows in result dataframe
+nrow(selWind3)
+
+#find number of na values for 2011
+sum(is.na(mydata2$Wind[which(mydata2$year=="2011")]))
+test1<-selWind3[which(selWind3$Date>"2011-12-12"&selWind3$Date<"2011-12-16"),names(selWind3)%in%c("Date","Consumption","Wind","Solar")]
+test1
+
+
+#fill the na data
+library(tidyr)
+library(tidyr)
+test1%>%fill(Wind)
+library(zoo)
+da=zoo::rollmean(mydata3$Consumption,k=3,fill = NA)
+
+View(da)
+#Trend analysis
+#Rolling mean for 3 day for consumption 
+threedaytest<-mydata3 %>% dplyr::arrange(desc(year))%>%
+  dplyr::group_by(year)%>%
+  dplyr::mutate(da=zoo::rollmean(Consumption,k=3,fill = NA),)%>%dplyr::ungroup()
+
+#rolling mean for 7 day
+threedaytest<-mydata2 %>% dplyr::arrange(desc(year))%>%
+  dplyr::group_by(year)%>%
+  dplyr::mutate(da7=zoo::rollmean(Consumption,k=7,fill = NA),
+                da365=zoo::rollmean(Consumption,k=365,fill = NA),)%>%dplyr::ungroup()
+#check the results
+threedaytest %>%
+  dplyr::arrange(Date) %>%
+  dplyr::filter(year==2017) %>%
+  dplyr::select(Consumption,Date,year,da7,da365)%>%
+  utils::head(7)
+
+par(mfrow=c(1,1))
+#trend at rolling average
+plot(threedaytest$Consumption,xlab="year",ylab="Consumption",type="l",
+     lwd=2,col="blue",main="Consumption Grapf")
+points(threedaytest$da7,type="l",lwd=2,xlim=c(2000,2018),ylim=c(900,2000),col="orange")
+lines(threedaytest$da365,type="l",lwd=5,xlim=c(2000,2018),ylim=c(900,2000),col="black")
+legend(2500,1600,legend=c("threedaytest$Consumption","threedaytest$da7","threedaytest$da365"),
+col=c("blue","orange","black"),pch=c("o","*","+"),lty=c(1,2,3),ncol=1)
+ 
